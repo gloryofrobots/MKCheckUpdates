@@ -68,6 +68,8 @@
     <ClCompile Include="WinApiView.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Config.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="UpdatesModel.h" />
     <ClInclude Include="GuiComponents.h" />
     <ClInclude Include="Typedef.h" />
@@ -80,6 +82,9 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MKCheckUpdates.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

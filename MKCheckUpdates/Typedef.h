@@ -11,7 +11,7 @@
 #	include <cstring>
 #	include <cstdlib>
 #	include <sstream>
-
+#	include <fstream>
 
 typedef wchar_t TCharW;
 typedef char TCharA;
@@ -21,6 +21,8 @@ typedef std::string String;
 
 typedef std::wstringstream WStringstream;
 typedef std::stringstream Stringstream;
+
+typedef std::ifstream InputFileStream;
 
 typedef void* WindowHandle;
 typedef unsigned __int64 uint64;

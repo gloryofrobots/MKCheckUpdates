@@ -5,15 +5,25 @@
 #include "UpdatesModel.h"
 #include "UpdatesReader.h"
 #include "WinApiView.h"
+#include "Config.h"
+
+
+void HelloWorld()
+{
+	 MessageBox(NULL, "Добрый день!", "Приветствие!",	MB_OK);
+}
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, 
 	PWSTR pCmdLine, int nCmdShow)
 {
+#ifdef JOKE_MODE
+	HelloWorld();
+#endif
+	
 	UpdatesReader reader;
 	CheckUpdatesModel model;
 
-	char * updatesDB = "data.bin"; 
-	if ( reader.read( updatesDB, model ) == false )
+	if ( reader.read( DB_PATH , model ) == false )
 	{
 		return -1;
 	}

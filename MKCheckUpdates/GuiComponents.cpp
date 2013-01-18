@@ -88,7 +88,7 @@ void ControlField::setWindowAttr( LPCTSTR lpWindowName, DWORD dwStyle, HWND hWnd
 //////////////////////////////////////////////////////////////////////////////
 void ControlField::createWindow( )
 {
-	m_window = CreateWindowA( m_lpClassName, m_lpWindowName, m_dwStyle, m_x, m_y, m_width, m_height, m_hWndParent,  m_hMenu, NULL, m_lpParam );
+	m_window = CreateWindow( m_lpClassName, m_lpWindowName, m_dwStyle, m_x, m_y, m_width, m_height, m_hWndParent,  m_hMenu, NULL, m_lpParam );
 }
 
 void ControlField::changeColor( DWORD _color )

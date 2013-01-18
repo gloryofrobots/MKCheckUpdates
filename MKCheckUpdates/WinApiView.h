@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Windows.h>
+#include "Typedef.h"
 
 class CheckUpdatesModel;
 
@@ -14,10 +15,14 @@ public:
 	bool show( const CheckUpdatesModel * _model );
 	void clear();
 	long windowProc(HWND hWnd, unsigned int Msg, WPARAM wParam, LPARAM lParam);
+	
 protected:
 	bool _initWindow();
-	HWND m_hWnd;
+	String _loadStringResource( UINT _id );
+	RECT WinApiView::_getWindowsRect();
 
+	HWND m_hWnd;
+	int m_countRows;
 	ATOM m_wndClassId;
 	LPCSTR m_wndClassName;
 

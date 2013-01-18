@@ -2,17 +2,24 @@
 #include "UpdatesModel.h"
 #include "GuiComponents.h"
 #include "CommCtrl.h"
+#include "resource.h"
 #include <WindowsX.h>
 
 #define ID_BUTTON_CLOSE 1
+#define ID_STATIC_NAME 2
+#define ID_STATIC_STATUS 3
+
+#define ID_STATIC_EXIST 4
+#define ID_STATIC_NOT_EXIST 5
+
 #define WINDOW_WIDTH 400
 #define WINDOW_HEIGHT 400
 
 //////////////////////////////////////////////////////////////////
-static void s_createLabel(ControlFieldStatic& labelName, HWND hWnd, const char * txt , int x ,int y, int width ,int height)
+static void s_createLabel(ControlFieldStatic& labelName, HWND hWnd, const char * txt , int x ,int y, int width ,int height, HMENU hMenu = NULL )
 {
 	labelName.setPosition(x , y , width ,height);
-	labelName.setWindowAttr( "", WS_CHILD | WS_VISIBLE | WS_OVERLAPPED , hWnd, NULL, NULL );
+	labelName.setWindowAttr( "", WS_CHILD | WS_VISIBLE | WS_OVERLAPPED , hWnd, hMenu, NULL );
 	labelName.createWindow();
 	labelName.setText( txt );
 }
@@ -32,6 +39,7 @@ long MainWndProc(HWND hWnd, unsigned int Msg, WPARAM wParam, LPARAM lParam)
 WinApiView::WinApiView( HINSTANCE _hInstance, HINSTANCE _hPrevInstance, PWSTR _pCmdLine, int _nCmdShow )
 	: m_instance(_hInstance)
 	, m_hWnd(NULL)
+	, m_countRows(0)
 {
 }
 //////////////////////////////////////////////////////////////
@@ -78,8 +86,9 @@ bool WinApiView::_initWindow()
 		return false;
 	}
 
+	String title = this->_loadStringResource( IDS_STRING_TITLE );
 	m_hWnd = CreateWindow( wc.lpszClassName
-		, "Evolution updates"
+		, title.c_str()
 		, WS_OVERLAPPEDWINDOW | WS_VISIBLE
 		, CW_USEDEFAULT
 		, CW_USEDEFAULT
@@ -125,24 +134,29 @@ bool WinApiView::show( const CheckUpdatesModel * _model )
 
 	int offsetXWidth = offsetX * count;
 
-	int width = 150;
+	int width = 175;
 	int height = 25;
 
-	int widthInfo = 200;
+	int widthInfo = 175;
 	int heightInfo = 20;
 	
+	//////////////////////////////////////////////////////////////////////
 	ControlFieldStatic labelName;
-	s_createLabel(labelName, m_hWnd, "Name", x, y, widthInfo, height);
-	labelName.changeColor( RGB(255, 255, 255) );
+	String nameTxt = this->_loadStringResource( IDS_STRING_NAME );
+	s_createLabel(labelName, m_hWnd, nameTxt.c_str(), x, y, widthInfo, height, (HMENU)ID_STATIC_NAME );
+	
+	//////////////////////////////////////////////////////////////////////
 	x += widthInfo + offsetX;
-
 	ControlFieldStatic labelStatus;
-	s_createLabel(labelStatus, m_hWnd, "Status", x, y, width, height);
-	labelStatus.changeColor( RGB(30, 50, 60) );
+	String statusTxt = this->_loadStringResource( IDS_STRING_STATUS );
+	s_createLabel(labelStatus, m_hWnd, statusTxt.c_str(), x, y, width, height, (HMENU)ID_STATIC_STATUS);
 	
-	y += heightInfo + offsetY;
+	//////////////////////////////////////////////////////////////////////
+	y += heightInfo + offsetY + offsetY;
 	x = leftIndent;
-	
+	String existTxt = this->_loadStringResource( IDS_STRING_EXIST );
+	String notExistTxt = this->_loadStringResource( IDS_STRING_NOT_EXIST );
+
 	for( TVectorUpdatesInfo::const_iterator
 		it = rows.begin(),
 		it_end = rows.end();
@@ -150,39 +164,53 @@ bool WinApiView::show( const CheckUpdatesModel * _model )
 	it++ )
 	{
 		const UpdatesInfo& row = *(it);
+		ControlFieldStatic rowView;
 		
-		char * status;
-
+		String * status = NULL;
+		HMENU wParam;
 		if( row.exist == false)
 		{
-			status = "does not exist";
+			status = &notExistTxt;
+			wParam = (HMENU) ID_STATIC_NOT_EXIST;
 		} 
 		else
 		{
-			status = "exist";
+			status = &existTxt;
+			wParam = (HMENU) ID_STATIC_EXIST;
 		}
 
-		ControlFieldStatic rowView;
-		s_createLabel( rowView, m_hWnd, row.name.c_str(), x, y, widthInfo, heightInfo );
+		s_createLabel( rowView, m_hWnd, row.name.c_str(), x, y, widthInfo, heightInfo, wParam );
 		
 		x += widthInfo + offsetX;
-		s_createLabel( rowView, m_hWnd, status, x, y, widthInfo, heightInfo );
 		
+		s_createLabel( rowView, m_hWnd, status->c_str(), x, y, widthInfo, heightInfo, wParam );
 		y += heightInfo + offsetY;
 		x = leftIndent;
 	}
-
+	
+	//////////////////////////////////////////////////////////////////////
 	x = ( WINDOW_WIDTH / 2 ) - ( width / 2 ) - leftIndent;
-	y += heightInfo + offsetY;
-
+	
+	RECT rect = this->_getWindowsRect();
+	size_t buttonY = rect.bottom - heightInfo - offsetY - height;
+	
+	if( y < buttonY )
+	{
+		y = buttonY;
+	}
+	else
+	{
+		y += heightInfo + offsetY;
+	}
+	
+	String closeTxt = this->_loadStringResource( IDS_STRING_CLOSE );
 	ControlFieldButton buttonClose;
 	buttonClose.setPosition( x, y, width, height );
-	buttonClose.setWindowAttr( "Close" ,WS_CHILD|BS_PUSHBUTTON|WS_VISIBLE ,m_hWnd ,(HMENU)ID_BUTTON_CLOSE, NULL	);
+	buttonClose.setWindowAttr( closeTxt.c_str() ,WS_CHILD|BS_PUSHBUTTON|WS_VISIBLE ,m_hWnd ,(HMENU)ID_BUTTON_CLOSE, NULL	);
 	buttonClose.createWindow();
 
-	x += width + offsetX;
-	y += heightInfo + offsetY;
-
+	y += heightInfo + offsetY +height;
+	//////////////////////////////////////////////////////////////////////
 	SD_OnInitDialog( m_hWnd, WINDOW_WIDTH, y, WINDOW_HEIGHT );
 	ScrollWindow( m_hWnd, 0, 0, NULL, NULL );
 	
@@ -195,6 +223,9 @@ bool WinApiView::show( const CheckUpdatesModel * _model )
 
 	return true;
 }
+
+HBRUSH hBrush_S = CreateSolidBrush(RGB(230,230,230));
+
 //////////////////////////////////////////////////////////////
 long WinApiView::windowProc(HWND hWnd, unsigned int Msg, WPARAM wParam, LPARAM lParam)
 {
@@ -217,6 +248,35 @@ long WinApiView::windowProc(HWND hWnd, unsigned int Msg, WPARAM wParam, LPARAM l
 	case WM_NCDESTROY:
 		return 0;
 		break;
+	case WM_CTLCOLORSTATIC:
+		{
+			DWORD CtrlID = GetDlgCtrlID((HWND)lParam); //Window Control ID
+			if ( CtrlID == ID_STATIC_NAME ||  CtrlID == ID_STATIC_STATUS ) //If desired control
+			{
+				HDC hdcStatic = (HDC) wParam;
+				SetTextColor(hdcStatic, RGB(0,0,0));
+				SetBkColor(hdcStatic, RGB(230,230,230));
+				return (INT_PTR)hBrush_S;
+			}
+			else if ( CtrlID == ID_STATIC_NOT_EXIST ) //If desired control
+			{
+				HDC hdcStatic = (HDC) wParam;
+				SetBkMode(hdcStatic,TRANSPARENT);
+				SetTextColor(hdcStatic, RGB(255,0,0));
+				//COLORREF old = GetBkColor(hdcStatic);
+				//SetBkColor(hdcStatic, old);
+				return (INT_PTR)hBrush_S;
+			}
+			else if ( CtrlID == ID_STATIC_EXIST ) //If desired control
+			{
+				HDC hdcStatic = (HDC) wParam;
+				SetBkMode(hdcStatic,TRANSPARENT);
+				SetTextColor(hdcStatic, RGB(0,100,0));
+				//COLORREF old = GetBkColor(hdcStatic);
+				//SetBkColor(hdcStatic, old);
+				return (INT_PTR)hBrush_S;
+			}
+		}
 	case WM_COMMAND:
 		if(wParam == ID_BUTTON_CLOSE)
 		{ 
@@ -245,5 +305,20 @@ void WinApiView::clear()
 
 	DestroyWindow(m_hWnd);
 }
+//////////////////////////////////////////////////////////////////
+String WinApiView::_loadStringResource( UINT _id )
+{
+	char buffer[255] = {'\0'};
 
+	LoadString(m_instance, _id, buffer, 255);
+	return String(buffer);
+}
+//////////////////////////////////////////////////////////////////
+RECT WinApiView::_getWindowsRect()
+{
+	RECT rc;
+	GetClientRect(m_hWnd, &rc);
+
+	return rc;
+}
 //////////////////////////////////////////////////////////////////
